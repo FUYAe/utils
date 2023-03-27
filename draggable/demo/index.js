@@ -99,4 +99,10 @@ function animate() {
 requestAnimationFrame(animate)
 
 
-makeitMovable("#clock", { type: "absolute" })
+makeitMovable("#clock", {
+  grid: "20x20",
+  onEleMove() {
+    console.log("moving");
+  }
+
+})

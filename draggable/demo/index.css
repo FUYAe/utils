@@ -1,22 +1,26 @@
-body{
+body {
   background-color: antiquewhite;
 }
-canvas{
+
+canvas {
   background-color: #fff;
 }
-#clock{
+
+#clock {
   width: 300px;
   height: 300px;
   border-radius: 50%;
-  position: absolute;
+  position: fixed;
   z-index: 20;
+  /* transition: all 500ms ease; */
 }
-.container{
+
+.container {
   position: relative;
   width: 1000px;
   height: 600px;
   padding: 20px;
   padding-right: 40px;
-    background-color: #fff;
-    /* box-sizing: border-box; */
+  background-color: #fff;
+  /* box-sizing: border-box; */
 }
