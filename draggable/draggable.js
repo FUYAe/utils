@@ -4,15 +4,16 @@
  * @param {Object} options 
  * @param {string} options.type  tagetElement`s css position ,default fixed，optional absolute
  * @param {string} options.parent  targetEle`s parentElement selector when position is absolute，first parentElemt as default
- * @param {string} options.dragbar targetElement`s dragbar when mouse down,default to  targetElement itself
+ * @param {string} options.dragbar targetElement`s dragbar selector when mouse down,default to  targetElement itself
+ * @param {function(MouseEvent)} options.onEleMove on targetElement moving
+ * @param {function(MouseEvent)} options.onStart  on targetElement start moving
+ * @param {function(MouseEvent)} options.onStop  on targetElement stop moving
  */
 function makeitMovable(selector, options) {
-  const { type, parent, dragbar } = options
+  const { type, parent, dragbar, onEleMove, onStop, onStart } = options
   let onMove = false
   let offsetX;
   let offsetY;
-  let maxRight = window.innerWidth
-  let maxBottom = window.innerHeight
   /** @type{HTMLElement} */
   const target = document.querySelector(selector)
   const targetStyle = getCompStyle(target)
@@ -28,30 +29,17 @@ function makeitMovable(selector, options) {
     offsetY = e.offsetY
     document.addEventListener("mousemove", onMouseMove)
     document.addEventListener("mouseup", onMouseUp)
+    onStart && onStart(e)
   }
-  function getCompStyle(ele) {
-    let style = getComputedStyle(ele)
-    return {
-      width: parseFloat(style.width),
-      height: parseFloat(style.height),
-      paddingBottom: parseFloat(style.paddingBottom),
-      paddingLeft: parseFloat(style.paddingLeft),
-      paddingRight: parseFloat(style.paddingRight),
-      paddingTop: parseFloat(style.paddingTop),
-      boxSizing: style.boxSizing,
-      position: style.position
 
-    }
-  }
   function moveTo(ele, { x, y }) {
     const targetlimits = {
       left: 0,
-      right: maxRight - getCompStyle(ele).width,
+      right: window.innerWidth - getCompStyle(ele).width,
       top: 0,
-      bottom: maxBottom - getCompStyle(ele).height
+      bottom: window.innerHeight - getCompStyle(ele).height
     }
     if (type === "absolute") {
-
       const { width, position, height, paddingBottom, paddingLeft, paddingRight, paddingTop, boxSizing } = getCompStyle(document.querySelector(parent) || target.parentElement)
       if (targetStyle.position !== "absolute") {
         throw new Error("The target element css position is not true, absolute expected")
@@ -74,6 +62,7 @@ function makeitMovable(selector, options) {
   }
   function onMouseMove(e) {
     if (onMove) {
+      onEleMove && onEleMove()
       moveTo(target, {
         x: e.clientX - offsetX, y: e.clientY - offsetY
       })
@@ -82,9 +71,24 @@ function makeitMovable(selector, options) {
 
   function onMouseUp() {
     onMove = false
+    onStop && onStop()
     document.removeEventListener("mousemove", onMouseMove)
     document.removeEventListener("mouseup", onMouseUp)
   }
 
 
+}
+function getCompStyle(ele) {
+  let style = getComputedStyle(ele)
+  return {
+    width: parseFloat(style.width),
+    height: parseFloat(style.height),
+    paddingBottom: parseFloat(style.paddingBottom),
+    paddingLeft: parseFloat(style.paddingLeft),
+    paddingRight: parseFloat(style.paddingRight),
+    paddingTop: parseFloat(style.paddingTop),
+    boxSizing: style.boxSizing,
+    position: style.position
+
+  }
 }
