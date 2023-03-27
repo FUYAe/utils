@@ -1,12 +1,3 @@
-/*
- * @Author: fuya f2956903402@gmail.com
- * @Date: 2023-03-27 01:15:39
- * @LastEditors: fuya f2956903402@gmail.com
- * @LastEditTime: 2023-03-27 01:15:50
- * @FilePath: \utils\makeitdragable.js
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
- */
-
 /**
  * 
  * @param {string} selector css selector of draggble tagetElement
@@ -24,10 +15,13 @@ function makeitMovable(selector, options) {
   let maxBottom = window.innerHeight
   /** @type{HTMLElement} */
   const target = document.querySelector(selector)
+  const targetStyle = getCompStyle(target)
+  if (targetStyle.position !== "fixed" && targetStyle.position !== "absolute") {
+    throw new Error("The target element css position is not true, absolute or fixed expected")
+
+  }
   const dragElement = document.querySelector(dragbar || selector)
   dragElement.addEventListener("mousedown", onMouseDown)
-
-  console.log('dragElement', dragElement)
   function onMouseDown(e) {
     onMove = true
     offsetX = e.offsetX
@@ -44,6 +38,8 @@ function makeitMovable(selector, options) {
       paddingLeft: parseFloat(style.paddingLeft),
       paddingRight: parseFloat(style.paddingRight),
       paddingTop: parseFloat(style.paddingTop),
+      boxSizing: style.boxSizing,
+      position: style.position
 
     }
   }
@@ -55,11 +51,23 @@ function makeitMovable(selector, options) {
       bottom: maxBottom - getCompStyle(ele).height
     }
     if (type === "absolute") {
-      const { width, height, paddingBottom, paddingLeft, paddingRight, paddingTop } = getCompStyle(document.querySelector(parent) || target.parentElement)
+
+      const { width, position, height, paddingBottom, paddingLeft, paddingRight, paddingTop, boxSizing } = getCompStyle(document.querySelector(parent) || target.parentElement)
+      if (targetStyle.position !== "absolute") {
+        throw new Error("The target element css position is not true, absolute expected")
+      }
       targetlimits.left = 0 + paddingLeft
-      targetlimits.right = width - getCompStyle(ele).width + paddingLeft
       targetlimits.top = 0 + paddingTop
-      targetlimits.bottom = height - getCompStyle(ele).height + paddingTop
+      if (boxSizing === "border-box") {
+        targetlimits.right = width - getCompStyle(ele).width - paddingRight
+        targetlimits.bottom = height - getCompStyle(ele).height - paddingBottom
+
+      } else {
+
+        targetlimits.right = width - getCompStyle(ele).width + paddingLeft
+        targetlimits.bottom = height - getCompStyle(ele).height + paddingTop
+      }
+
     }
     ele.style.left = `${Math.min(targetlimits.right, Math.max(targetlimits.left, x))}px`
     ele.style.top = `${Math.min(targetlimits.bottom, Math.max(targetlimits.top, y))}px`

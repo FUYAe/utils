@@ -1,0 +1,22 @@
+body{
+  background-color: antiquewhite;
+}
+canvas{
+  background-color: #fff;
+}
+#clock{
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  position: absolute;
+  z-index: 20;
+}
+.container{
+  position: relative;
+  width: 1000px;
+  height: 600px;
+  padding: 20px;
+  padding-right: 40px;
+    background-color: #fff;
+    /* box-sizing: border-box; */
+}
