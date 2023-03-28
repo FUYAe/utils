@@ -100,8 +100,9 @@ requestAnimationFrame(animate)
 
 
 makeitMovable("#clock", {
-  grid: "20x20",
-  onEleMove() {
+  type: "absolute",
+  scope: [-30]
+  , onEleMove() {
     console.log("moving");
   }
 

@@ -6,12 +6,13 @@
  * @param {string} options.parent  targetEle`s parentElement selector when position is absolute，first parentElemt as default
  * @param {string} options.dragbar targetElement`s dragbar selector when mouse down,default to  targetElement itself
  * @param {string} options.grid grid row x Col  like 3x5
+ * @param {number[]} options.scope [top,right,bottom,left] in+,out-
  * @param {function(MouseEvent)} options.onEleMove on targetElement moving
  * @param {function(MouseEvent)} options.onStart  on targetElement start moving
  * @param {function(MouseEvent)} options.onStop  on targetElement stop moving
  */
 function makeitMovable(selector, options) {
-  const { type, parent, dragbar, grid, onEleMove, onStop, onStart } = options
+  let { type, parent, dragbar, scope, grid, onEleMove, onStop, onStart } = handleOptions(selector, options)
   let onMove = false
   let offsetX;
   let offsetY;
@@ -22,16 +23,13 @@ function makeitMovable(selector, options) {
   /** @type{HTMLElement} */
   const target = document.querySelector(selector)
   const targetStyle = getCompStyle(target)
-  if (targetStyle.position !== "fixed" && targetStyle.position !== "absolute") {
-    throw new Error("The target element css position is not true, absolute or fixed expected")
 
-  }
   if (grid) {
     let grids = grid.split("x")
     row = Number(grids[0])
     col = Number(grids[1])
   }
-  const dragElement = document.querySelector(dragbar || selector)
+  const dragElement = document.querySelector(dragbar) || target
   dragElement.addEventListener("mousedown", onMouseDown)
   function onMouseDown(e) {
     onMove = true
@@ -44,10 +42,10 @@ function makeitMovable(selector, options) {
 
   function moveTo(ele, { x, y }) {
     const targetlimits = {
-      left: 0,
-      right: window.innerWidth - getCompStyle(ele).width,
-      top: 0,
-      bottom: window.innerHeight - getCompStyle(ele).height,
+      left: 0 + scope[3],
+      right: window.innerWidth - getCompStyle(ele).width - scope[1],
+      top: 0 + scope[0],
+      bottom: window.innerHeight - getCompStyle(ele).height - scope[2],
 
     }
     let MovableWidth = window.innerWidth
@@ -57,20 +55,20 @@ function makeitMovable(selector, options) {
       if (targetStyle.position !== "absolute") {
         throw new Error("The target element css position is not true, absolute expected")
       }
-      targetlimits.left = 0 + paddingLeft
-      targetlimits.top = 0 + paddingTop
-      MovableWidth = width
-      MovableHeight = height
+      targetlimits.left = 0 + paddingLeft + scope[3]
+      targetlimits.top = 0 + paddingTop + scope[0]
+      MovableWidth = width + scope[3] - scope[1]
+      MovableHeight = height + scope[0] - scope[2]
       if (boxSizing === "border-box") {
-        MovableWidth = width - paddingLeft - paddingRight
-        MovableHeight = height - paddingBottom - paddingTop
-        targetlimits.right = width - getCompStyle(ele).width - paddingRight
-        targetlimits.bottom = height - getCompStyle(ele).height - paddingBottom
+        MovableWidth = width - paddingLeft - paddingRight + scope[3] - scope[1]
+        MovableHeight = height - paddingBottom - paddingTop + scope[0] - scope[2]
+        targetlimits.right = width - getCompStyle(ele).width - paddingRight - scope[1]
+        targetlimits.bottom = height - getCompStyle(ele).height - paddingBottom - scope[2]
 
       } else {
 
-        targetlimits.right = width - getCompStyle(ele).width + paddingLeft
-        targetlimits.bottom = height - getCompStyle(ele).height + paddingTop
+        targetlimits.right = width - getCompStyle(ele).width + paddingLeft - scope[1]
+        targetlimits.bottom = height - getCompStyle(ele).height + paddingTop - scope[2]
       }
 
     }
@@ -82,6 +80,7 @@ function makeitMovable(selector, options) {
       if (gridMoveXOld == x && gridMoveYOld == y) {
         return
       }
+
       gridMoveXOld = x
       gridMoveYOld = y
     }
@@ -106,6 +105,49 @@ function makeitMovable(selector, options) {
   }
 
 
+}
+/**
+ * @param { Object } options
+  * @param { string } options.type  tagetElement`s css position ,default fixed，optional absolute
+ * @param {string} options.parent  targetEle`s parentElement selector when position is absolute，first parentElemt as default
+  * @param { string } options.dragbar targetElement`s dragbar selector when mouse down,default to  targetElement itself
+ * @param {string} options.grid grid row x Col  like 3x5
+ * @param {number[]} options.scope [top,right,bottom,left] in+,out-
+ * @param {function(MouseEvent)} options.onEleMove on targetElement moving
+ * @param {function(MouseEvent)} options.onStart  on targetElement start moving
+ * @param {function(MouseEvent)} options.onStop  on targetElement stop moving
+ */
+function handleOptions(selector, options) {
+  let { type, parent, dragbar, scope } = options
+  if (!type) {
+    options["type"] = "fixed"
+  }
+  const target = document.querySelector(selector)
+  const targetStyle = getCompStyle(target)
+  if (targetStyle.position !== "fixed" && targetStyle.position !== "absolute") {
+    throw new Error("The target element css position is not true, absolute or fixed expected")
+
+  }
+  if (targetStyle.position !== type) {
+    throw new Error(`The target element css position is not equal to type '${type}' , '${type}' expected`)
+
+  }
+
+  if (scope) {
+    if (scope.length == 2) {
+      let tb = scope[0]
+      let lr = scope[1]
+      options["scope"] = [tb, lr, tb, lr]
+    } else if (scope.length == 1) {
+      let v = scope[0]
+      options["scope"] = [v, v, v, v]
+    } else {
+      new Error("scope wrong")
+    }
+  } else {
+    options["scope"] = [0, 0, 0, 0]
+  }
+  return options
 }
 function getCompStyle(ele) {
   let style = getComputedStyle(ele)
